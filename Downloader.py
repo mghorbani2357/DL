@@ -35,16 +35,15 @@ class Downloader:
         for i in range(self.threads - 1):
             threads.append(
                 Thread(target=self.download_thread, args=(i * thread_download_size, (i + 1) * thread_download_size)))
+        else:
+            i = self.threads.__len__()
 
-        i += 1
         threads.append(Thread(target=self.download_thread, args=(i * thread_download_size, self.file_size)))
 
         for thread in threads:
-            # thread.setDaemon(True)
             thread.start()
 
         for thread in threads:
-
             thread.join()
 
         self.download_file.close()
@@ -72,3 +71,37 @@ class Downloader:
 
         print(f"\r\033[kDownloading state: {size(self.downloaded_size)}  [%3.2f%%]" % (
                 self.downloaded_size * 100. / self.file_size), end='')
+
+
+class Queue:
+    jobs = list()
+
+    def __init__(self, jobs=[], max_workers=3, running=False):
+        self.jobs = jobs
+        self.running = running
+
+    def start(self):
+        self.running = True
+
+    def stop(self):
+        self.running = False
+
+    def worker(self):
+        while self.running:
+            running_threads = list()
+            for job in jobs:
+                while running_threads.__len__() <= self.max_workers:
+                    running_threads.append(Thread(target=job.task, args=job.args))
+                    running_threads[-1].start()
+
+
+class DownloadManager:
+    max_download_thread = 8
+
+    def __init__(self, max_download_thread=8):
+        self.max_download_thread = max_download_thread
+
+    def download(self, url, download_path):
+        downloader = Downloader(self.max_download_thread)
+
+        downloader.download(url, download_path)
