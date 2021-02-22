@@ -1,6 +1,8 @@
 from urllib.request import urlopen, Request
 from hurry.filesize import size
 from threading import Thread
+from multiprocessing import Lock
+from multiprocessing.pool import ThreadPool
 
 
 class Downloader:
@@ -14,6 +16,8 @@ class Downloader:
     download_file = None
 
     def __init__(self, threads=8, block_size=8196):
+        self.lock = Lock()
+        self.thread_pool = ThreadPool(self.threads)
         self.threads = threads
         self.block_size = block_size
 
@@ -47,6 +51,16 @@ class Downloader:
             thread.join()
 
         self.download_file.close()
+
+    def new_thread(self):
+        global i
+        while True:
+            self.lock.acquire()
+            if i >= 100:
+                break
+            i += 1
+            self.lock.release()
+        self.lock.release()
 
     def download_thread(self, start, end):
         print("I'm working")
