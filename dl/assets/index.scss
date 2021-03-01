@@ -18,6 +18,22 @@ $asideWidth: 25%;
   margin: 0;
   @include box-sizing(border-box);
   color: black;
+
+  &::-webkit-scrollbar {
+    $size: 6px;
+    width: $size;
+    height: $size;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+    border: 3px solid rgba(0, 0, 0, 0.2);
+  }
 }
 
 a {
@@ -232,10 +248,12 @@ body {
 
       & > section {
         flex-grow: 4;
+        overflow: auto;
 
         & > table {
           border-collapse: collapse;
           width: 100%;
+          min-width: 1000px;
           vertical-align: middle;
 
           * {
@@ -259,14 +277,17 @@ body {
               & > div {
                 display: flex;
                 justify-content: flex-end;
+
                 a {
                   display: inline-block;
                   width: 30%;
-                  svg *{
+
+                  svg * {
                     @include transition-duration(0.3s)
                   }
-                  &:hover{
-                    svg *{
+
+                  &:hover {
+                    svg * {
                       fill: var(--success);
                     }
                   }
