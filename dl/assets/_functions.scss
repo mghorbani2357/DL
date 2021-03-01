@@ -1,0 +1,57 @@
+@mixin support($key, $value) {
+  #{$key}: $value;
+  -webkit-#{$key}: $value;
+  -moz-#{$key}: $value;
+  -ms-#{$key}: $value;
+  -o-#{$key}: $value;
+}
+
+@mixin s-box-shadow($shadow) {
+  @include support(box-shadow, $shadow);
+}
+
+@mixin border-radius($radius) {
+  @include support(border-radius, $radius);
+}
+
+@mixin filter($filter) {
+  @include support(filter, $filter);
+}
+
+@mixin blur($blur) {
+  @include filter(blur($blur));
+  backdrop-filter: blur($blur);
+}
+
+@mixin box-sizing($value) {
+  @include support(box-sizing, $value);
+}
+
+@mixin box-sizing($value) {
+  @include support(box-sizing, $value);
+}
+
+@mixin transform($transform) {
+  @include support(transform, $transform)
+}
+
+@mixin translate($y, $x) {
+  @include transform(translate($y, $x))
+}
+
+
+@mixin translateX($x) {
+  @include transform(translateX($x))
+}
+
+@mixin translateY($y) {
+  @include transform(translateY($y))
+}
+
+@mixin rotate($deg) {
+  @include transform(rotate($deg))
+}
+
+@mixin transition-duration($time) {
+  @include support(transition-duration, $time)
+}

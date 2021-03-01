@@ -1,0 +1,12 @@
+$path: "../assets/fonts/poppins/";
+$types: (300: 300, regular: 400, 500: 500, 600: 600, 700: 700);
+
+@each $type, $weight in $types {
+  @font-face {
+    font-family: Poppins;
+    font-style: normal;
+    font-weight: $weight;
+    src: url("#{$path}poppins-v12-latin-#{$type}.eot");
+    src: url("#{$path}poppins-v12-latin-#{$type}.eot?#iefix") format("embedded-opentype"), url("#{$path}poppins-v12-latin-#{$type}.woff2") format("woff2"), url("#{$path}poppins-v12-latin-#{$type}.woff") format("woff"), url("#{$path}poppins-v12-latin-#{$type}.ttf") format("truetype");
+  }
+}
