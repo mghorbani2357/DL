@@ -16,5 +16,5 @@ class Api:
 
 if __name__ == '__main__':
     api = Api()
-    window = webview.create_window('Downloader', "index.html", js_api=api,min_size=(800,600))
+    window = webview.create_window('Downloader', "index.html", js_api=api, min_size=(800, 600))
     webview.start()

@@ -58,6 +58,7 @@ body {
 
     #aside {
       width: $asideWidth;
+      position: relative;
 
       & > ul {
         .label {
@@ -145,7 +146,7 @@ body {
           li {
             @include border-radius(10px);
 
-            &:hover {
+            &:hover, &.active {
               background-color: var(--success-light);
               color: var(--success);
 
@@ -160,6 +161,26 @@ body {
           }
         }
       }
+
+      & > footer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        padding: $gap;
+        border-top: var(--border);
+        color: var(--text-light);
+
+        #settings-btn {
+          font-size: 0;
+          width: 20px;
+          float: right;
+
+          img {
+            max-width: 100%;
+          }
+        }
+      }
     }
 
 
@@ -170,6 +191,66 @@ body {
       align-items: stretch;
       flex-direction: column;
       //justify-content: space-between;
+      .btn-action {
+        border: 1px solid var(--info);
+        max-width: 100%;
+        display: block;
+        @include border-radius(100%);
+        position: relative;
+        font-size: 0;
+        @include transition-duration(0.3s);
+
+        &:after {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          font-size: 12px;
+          color: var(--info);
+          @include translate(-50%, -50%);
+          display: inline;
+          @include transition-duration(0.3s);
+        }
+
+        &:hover {
+          background-color: var(--info);
+
+          &:after {
+            color: white;
+          }
+        }
+
+        &.btn-pause {
+          &:after {
+            content: "||";
+            line-height: 2px;
+            font-size: 9px;
+          }
+        }
+
+        &.btn-stop {
+          &:after {
+            content: '■';
+            margin-top: -1px;
+          }
+        }
+
+        &.btn-start {
+          &:after {
+            content: '▸';
+            font-size: 23px;
+            line-height: 1px;
+          }
+        }
+
+        &.btn-delete {
+          &:after {
+            content: '×';
+            font-size: 17px;
+            line-height: 20px;
+          }
+        }
+
+      }
 
       & > * {
         padding: $gap;
@@ -302,6 +383,9 @@ body {
 
             td:nth-child(2) {
               width: 45px;
+              img{
+                max-width: 100%;
+              }
             }
 
             td:last-child {
@@ -310,10 +394,17 @@ body {
               & > div {
                 display: flex;
                 justify-content: flex-end;
+                font-size: 0;
 
                 a {
                   display: inline-block;
-                  width: 30%;
+                  $size: 20px;
+                  width: $size;
+                  height: $size;
+
+                  &:not(:first-child) {
+                    margin-left: 5px;
+                  }
 
                   img {
                     width: 95%;
@@ -440,6 +531,7 @@ body {
             table {
               border-collapse: collapse;
               margin-top: 5px;
+
               tr {
                 td {
                   font-size: 11px;
@@ -448,6 +540,7 @@ body {
                     color: var(--text-light);
                     min-width: 150px;
                   }
+
                   &:nth-child(2n) {
                     padding-right: $gap;
                   }
