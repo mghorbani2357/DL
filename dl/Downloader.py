@@ -1,7 +1,5 @@
 from urllib.request import urlopen, Request
 from multiprocessing.pool import ThreadPool
-from multiprocessing import Queue
-from multiprocessing import Lock
 
 
 class Downloader:
@@ -13,8 +11,7 @@ class Downloader:
     file_size = 0
     file_name = None
     download_file = None
-    lock = Lock()
-    __detail_check = False
+    resumable = False
 
     def __init__(self, url, download_path, threads=8, block_size=8196):
         self.url = url
@@ -22,6 +19,7 @@ class Downloader:
         self.thread_pool = ThreadPool(self.threads)
         self.threads = threads
         self.block_size = block_size
+        self.get_details()
 
     def get_details(self):
         u = urlopen(self.url)
@@ -30,43 +28,50 @@ class Downloader:
         self.file_name = self.url.split('/')[-1]
         self.file_size = int(meta.get("Content-Length"))
 
+        if meta.get('Accept-Ranges') == 'bytes':
+            self.resumable = True
+
     def download(self):
-        if not self.__detail_check:
-            self.get_details()
 
         self.download_file = open(self.download_path, 'wb')
         self.download_file.seek(self.file_size - 1)
         self.download_file.write(b'\0')
+        self.download_file.seek(0)
 
-        queue = Queue()
+        if self.resumable:
 
-        i = 0
-        lst = list()
-        while True:
-            if self.block_size * (i + 1) > self.file_size:
-                if self.file_size % self.block_size != 0:
-                    queue.put([i * self.block_size, self.file_size])
-                    lst.append([i * self.block_size, self.file_size])
+            i = 0
+            partitions = list()
+            while True:
+                if self.block_size * (i + 1) > self.file_size:
+                    if self.file_size % self.block_size != 0:
+                        partitions.append([i * self.block_size, self.file_size])
 
-                break
+                    break
 
-            lst.append([i * self.block_size, (i + 1) * self.block_size])
-            queue.put([i * self.block_size, (i + 1) * self.block_size])
-            i += 1
+                partitions.append([i * self.block_size, (i + 1) * self.block_size])
+                i += 1
 
-        self.thread_pool.map(self.download_thread, (queue,))
+            self.thread_pool.map(self.threaded_download, partitions)
+        else:
+            self.single_thread_download()
 
-        self.download_file.close()
+            self.download_file.close()
 
-    def download_thread(self, queue):
-        while not queue.empty():
-            beginning_pointer, ending_pointer = queue.get()
-            request = Request(self.url)
-            request.add_header("Range", f"bytes={beginning_pointer}-{ending_pointer}")
-            download_url = urlopen(request)
-            buffer = download_url.read(self.block_size)
+    def threaded_download(self, download_data):
+        beginning_pointer, ending_pointer = download_data
+        request = Request(self.url)
+        request.add_header("Range", f"bytes={beginning_pointer}-{ending_pointer}")
+        response = urlopen(request)
+        buffer = response.read()
+        self.write_file(buffer, beginning_pointer)
+
+    def single_thread_download(self):
+        request = Request(self.url)
+        response = urlopen(request)
+        while buffer := response.read(self.block_size):
             print(buffer)
-            self.write_file(buffer, beginning_pointer)
+            self.download_file.write(buffer)
 
     def write_file(self, buffer, pointer):
         self.download_file.seek(pointer)
