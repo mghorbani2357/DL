@@ -101,12 +101,12 @@ body {
               padding: 7px 0 7px 30px;
             }
 
-            svg {
+            svg, img {
               position: absolute;
               top: 50%;
             }
 
-            svg.icon {
+            .icon {
               width: 20px;
               left: 20px;
               @include translate(-50%, -50%);
@@ -153,9 +153,9 @@ body {
                 color: var(--success);
               }
 
-              svg g *[fill] {
+              /*svg g *[fill] {
                 fill: var(--success);
-              }
+              }*/
             }
           }
         }
@@ -202,6 +202,11 @@ body {
 
               @include transition-duration(0.3s);
 
+              img {
+                width: 100%;
+                height: 100%;
+              }
+
               svg {
                 width: 100%;
                 height: 100%;
@@ -246,6 +251,34 @@ body {
         }
       }
 
+      .progress-col {
+        min-width: 100px;
+
+        .progress, .remaining {
+          font-size: 10.5px;
+        }
+
+        .progress {
+          font-weight: 600;
+        }
+
+        .remaining {
+          float: right;
+          color: var(--text-light);
+        }
+
+        .progress-bar {
+          width: 100%;
+          background-color: rgba(0, 0, 0, 0.1);
+          height: 5px;
+
+          & > div {
+            background-color: var(--info);
+            height: 100%;
+          }
+        }
+      }
+
       & > section {
         flex-grow: 4;
         overflow: auto;
@@ -281,6 +314,11 @@ body {
                 a {
                   display: inline-block;
                   width: 30%;
+
+                  img {
+                    width: 95%;
+                    height: 95%;
+                  }
 
                   svg * {
                     @include transition-duration(0.3s)
@@ -370,33 +408,7 @@ body {
                 background-color: var(--success-light);
               }
 
-              .progress-col {
-                min-width: 100px;
 
-                .progress, .remaining {
-                  font-size: 10.5px;
-                }
-
-                .progress {
-                  font-weight: 600;
-                }
-
-                .remaining {
-                  float: right;
-                  color: var(--text-light);
-                }
-
-                .progress-bar {
-                  width: 100%;
-                  background-color: rgba(0, 0, 0, 0.1);
-                  height: 5px;
-
-                  & > div {
-                    background-color: var(--info);
-                    height: 100%;
-                  }
-                }
-              }
             }
           }
         }
@@ -404,9 +416,46 @@ body {
 
       & > footer {
         width: 100%;
-        flex-grow: 1;
         //height: 20%;
         align-self: flex-end;
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: stretch;
+
+        & > div {
+          &:first-child {
+            width: 80px;
+            font-size: 0;
+            margin-left: -9px;
+
+            img {
+              width: 100%;
+            }
+          }
+
+          &:last-child {
+            width: calc(100% - 80px);
+
+            table {
+              border-collapse: collapse;
+              margin-top: 5px;
+              tr {
+                td {
+                  font-size: 11px;
+
+                  &:nth-child(2n+1) {
+                    color: var(--text-light);
+                    min-width: 150px;
+                  }
+                  &:nth-child(2n) {
+                    padding-right: $gap;
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
 
