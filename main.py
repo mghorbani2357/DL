@@ -96,7 +96,6 @@
 
 from dl.Downloader import Downloader
 
-downloader = Downloader()
+downloader = Downloader('http://0.0.0.0:8000/dlw', 'dlwd', block_size=4)
 
-downloader.download('file:///home/bluesp/Downloads/Soul.2020.720p.WEBRip.800MB.x264-GalaxyRG[TGx]/Soul.2020.720p.WEBRip.800MB.x264-GalaxyRG.mkv',
-                    'Soul.2020.720p.WEBRip.800MB.x264-GalaxyRG.mkv')
+downloader.download()

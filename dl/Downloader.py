@@ -14,20 +14,25 @@ class Downloader:
     file_name = None
     download_file = None
     lock = Lock()
+    __detail_check = False
 
-    def __init__(self, threads=8, block_size=8196):
+    def __init__(self, url, download_path, threads=8, block_size=8196):
+        self.url = url
+        self.download_path = download_path
         self.thread_pool = ThreadPool(self.threads)
         self.threads = threads
         self.block_size = block_size
 
-    def download(self, url, download_path):
-        u = urlopen(url)
+    def get_details(self):
+        u = urlopen(self.url)
         meta = u.info()
 
-        self.url = url
-        self.download_path = download_path
-        self.file_name = url.split('/')[-1]
+        self.file_name = self.url.split('/')[-1]
         self.file_size = int(meta.get("Content-Length"))
+
+    def download(self):
+        if not self.__detail_check:
+            self.get_details()
 
         self.download_file = open(self.download_path, 'wb')
         self.download_file.seek(self.file_size - 1)
@@ -36,16 +41,18 @@ class Downloader:
         queue = Queue()
 
         i = 0
-
+        lst = list()
         while True:
-            queue.put([i * self.block_size, (i + i) * self.block_size])
-            i += 1
-
-            if self.block_size * i > self.file_size:
+            if self.block_size * (i + 1) > self.file_size:
                 if self.file_size % self.block_size != 0:
-                    queue.put([(i + 1) * self.block_size, self.file_size])
+                    queue.put([i * self.block_size, self.file_size])
+                    lst.append([i * self.block_size, self.file_size])
 
                 break
+
+            lst.append([i * self.block_size, (i + 1) * self.block_size])
+            queue.put([i * self.block_size, (i + 1) * self.block_size])
+            i += 1
 
         self.thread_pool.map(self.download_thread, (queue,))
 
@@ -58,13 +65,9 @@ class Downloader:
             request.add_header("Range", f"bytes={beginning_pointer}-{ending_pointer}")
             download_url = urlopen(request)
             buffer = download_url.read(self.block_size)
-            self.write_file(buffer, pointer)
-        print('done')
+            print(buffer)
+            self.write_file(buffer, beginning_pointer)
 
     def write_file(self, buffer, pointer):
-        # self.lock.acquire()
         self.download_file.seek(pointer)
         self.download_file.write(buffer)
-        # self.downloaded_size += len(buffer)
-        # print('\r', self.downloaded_size, end='')
-        # self.lock.release()
