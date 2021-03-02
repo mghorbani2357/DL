@@ -35,8 +35,17 @@ class Downloader:
 
         queue = Queue()
 
-        for i in range(int(self.file_size / self.block_size)):
-            queue.put(i * self.block_size)
+        i = 0
+
+        while True:
+            queue.put([i * self.block_size, (i + i) * self.block_size])
+            i += 1
+
+            if self.block_size * i > self.file_size:
+                if self.file_size % self.block_size != 0:
+                    queue.put([(i + 1) * self.block_size, self.file_size])
+
+                break
 
         self.thread_pool.map(self.download_thread, (queue,))
 
@@ -44,18 +53,18 @@ class Downloader:
 
     def download_thread(self, queue):
         while not queue.empty():
-            pointer = queue.get()
+            beginning_pointer, ending_pointer = queue.get()
             request = Request(self.url)
-            request.add_header("Range", f"bytes={pointer}-{pointer + self.block_size}")
+            request.add_header("Range", f"bytes={beginning_pointer}-{ending_pointer}")
             download_url = urlopen(request)
             buffer = download_url.read(self.block_size)
             self.write_file(buffer, pointer)
         print('done')
 
     def write_file(self, buffer, pointer):
-        self.lock.acquire()
+        # self.lock.acquire()
         self.download_file.seek(pointer)
         self.download_file.write(buffer)
-        self.downloaded_size += len(buffer)
-        print('\r', self.downloaded_size, end='')
-        self.lock.release()
+        # self.downloaded_size += len(buffer)
+        # print('\r', self.downloaded_size, end='')
+        # self.lock.release()
