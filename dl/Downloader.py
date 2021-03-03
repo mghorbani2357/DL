@@ -14,6 +14,7 @@ class Downloader:
     file_name = None
     download_file = None
     pause_able = False
+    speed = 0
 
     def __init__(self, url, download_path, threads=8, block_size=8196):
         self.url = url
@@ -36,11 +37,8 @@ class Downloader:
     def percent(self):
         return self.downloaded_size * 100 / self.file_size
 
-    def speed(self):
-        return 1
-
     def remaining_time(self):
-        return (self.file_size - self.downloaded_size) / self.speed()
+        return (self.file_size - self.downloaded_size) / self.speed
 
     def get_remaining_time(self):
         return display_time(self.remaining_time())
