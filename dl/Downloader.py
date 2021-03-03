@@ -40,7 +40,7 @@ class Downloader:
         return 1
 
     def remaining_time(self):
-        return self.file_size / self.speed()
+        return (self.file_size - self.downloaded_size) / self.speed()
 
     def get_remaining_time(self):
         return display_time(self.remaining_time())
