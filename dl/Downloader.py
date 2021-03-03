@@ -2,7 +2,9 @@ from urllib.request import urlopen, Request
 from multiprocessing.pool import ThreadPool
 from multiprocessing import Lock
 from multiprocessing.queues import Queue
-from .utils import display_time, sizeof_fmt
+
+
+# from dl.utils import display_time, sizeof_fmt
 
 
 class Downloader:
@@ -30,7 +32,7 @@ class Downloader:
         previous_downloaded_size = self.downloaded_size
         current_downloaded_size = self.downloaded_size
         while self.downloading:
-            self.speed = current_downloaded_size - previous_downloaded_size
+            self.speed = (current_downloaded_size - previous_downloaded_size) * 10
             time.sleep(0.1)
             previous_downloaded_size = current_downloaded_size
             current_downloaded_size = self.downloaded_size
@@ -59,7 +61,7 @@ class Downloader:
 
     def download(self):
 
-        self.download_file = open(self.download_path, 'wb')
+        self.download_file = open(self.download_path, 'w+b')
         self.download_file.seek(self.file_size - 1)
         self.download_file.write(b'\0')
         self.download_file.seek(0)
@@ -89,7 +91,7 @@ class Downloader:
         request = Request(self.url)
         request.add_header("Range", f"bytes={beginning_pointer}-{ending_pointer}")
         response = urlopen(request)
-        buffer = response.read()
+        buffer = response.read(self.block_size)
         self.write_file(buffer, beginning_pointer)
         self.lock.acquire()
         self.downloaded_size += len(buffer)

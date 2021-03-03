@@ -96,6 +96,8 @@
 
 from dl.Downloader import Downloader
 
-downloader = Downloader('http://0.0.0.0:8000/dlw', 'dlwd', block_size=4)
+downloader = Downloader('http://sv.tamanamusics.ir/songs/Sadegh%20-%20Sangin%20(Ft%20Ho3ein).mp3', 'faze sangin.mp3')
 
 downloader.download()
+
+print(downloader.downloaded_size)
