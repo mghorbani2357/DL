@@ -33,6 +33,10 @@ $(function () {
         }
     })
     $("#aside > ul > li:not(.label):first > a:first").click();
+
+    $("#new-btn").click(function (){
+        pywebview.api.new_download()
+    })
 });
 
 // initialize()
