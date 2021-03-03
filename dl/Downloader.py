@@ -13,7 +13,7 @@ class Downloader:
     file_size = 0
     file_name = None
     download_file = None
-    resumable = False
+    pause_able = False
 
     def __init__(self, url, download_path, threads=8, block_size=8196):
         self.url = url
@@ -31,7 +31,7 @@ class Downloader:
         self.file_size = int(meta.get("Content-Length"))
 
         if meta.get('Accept-Ranges') == 'bytes':
-            self.resumable = True
+            self.pause_able = True
 
     def percent(self):
         return self.downloaded_size * 100 / self.file_size
@@ -55,7 +55,7 @@ class Downloader:
         self.download_file.write(b'\0')
         self.download_file.seek(0)
 
-        if self.resumable:
+        if self.pause_able:
 
             i = 0
             partitions = list()
