@@ -1,7 +1,4 @@
 from urllib.request import urlopen, Request
-from hurry.filesize import size
-from threading import Thread
-from multiprocessing import Lock
 from multiprocessing.pool import ThreadPool
 
 
@@ -14,108 +11,113 @@ class Downloader:
     file_size = 0
     file_name = None
     download_file = None
+    resumable = False
 
-    def __init__(self, threads=8, block_size=8196):
-        self.lock = Lock()
+    def __init__(self, url, download_path, threads=8, block_size=8196):
+        self.url = url
+        self.download_path = download_path
         self.thread_pool = ThreadPool(self.threads)
         self.threads = threads
         self.block_size = block_size
+        self.get_details()
 
-    def download(self, url, download_path):
-        u = urlopen(url)
+    def get_details(self):
+        u = urlopen(self.url)
         meta = u.info()
 
-        self.url = url
-        self.download_path = download_path
-        self.file_name = url.split('/')[-1]
+        self.file_name = self.url.split('/')[-1]
         self.file_size = int(meta.get("Content-Length"))
+
+        if meta.get('Accept-Ranges') == 'bytes':
+            self.resumable = True
+
+    def percent(self):
+        return self.downloaded_size * 100 / self.file_size
+
+    def speed(self):
+        return 1
+
+    def remaining_time(self):
+        return self.file_size / self.speed()
+
+    def get_remaining_time(self):
+        return display_time(self.remaining_time())
+
+    def get_size(self):
+        return sizeof_fmt(self.file_size)
+
+    def download(self):
+
         self.download_file = open(self.download_path, 'wb')
         self.download_file.seek(self.file_size - 1)
         self.download_file.write(b'\0')
+        self.download_file.seek(0)
 
-        thread_download_size = int(self.file_size / self.threads)
+        if self.resumable:
 
-        threads = list()
-        for i in range(self.threads - 1):
-            threads.append(
-                Thread(target=self.download_thread, args=(i * thread_download_size, (i + 1) * thread_download_size)))
+            i = 0
+            partitions = list()
+            while True:
+                if self.block_size * (i + 1) > self.file_size:
+                    if self.file_size % self.block_size != 0:
+                        partitions.append([i * self.block_size, self.file_size])
+
+                    break
+
+                partitions.append([i * self.block_size, (i + 1) * self.block_size])
+                i += 1
+
+            self.thread_pool.map(self.threaded_download, partitions)
         else:
-            i = self.threads.__len__()
+            self.single_thread_download()
 
-        threads.append(Thread(target=self.download_thread, args=(i * thread_download_size, self.file_size)))
+            self.download_file.close()
 
-        for thread in threads:
-            thread.start()
-
-        for thread in threads:
-            thread.join()
-
-        self.download_file.close()
-
-    def new_thread(self):
-        global i
-        while True:
-            self.lock.acquire()
-            if i >= 100:
-                break
-            i += 1
-            self.lock.release()
-        self.lock.release()
-
-    def download_thread(self, start, end):
-        print("I'm working")
+    def threaded_download(self, download_data):
+        beginning_pointer, ending_pointer = download_data
         request = Request(self.url)
-        request.add_header("Range", f"bytes={start}-{end}")
-        download_url = urlopen(request)
+        request.add_header("Range", f"bytes={beginning_pointer}-{ending_pointer}")
+        response = urlopen(request)
+        buffer = response.read()
+        self.write_file(buffer, beginning_pointer)
 
-        current_download_point = start
-        while current_download_point < end:
+    def single_thread_download(self):
+        request = Request(self.url)
+        response = urlopen(request)
+        while buffer := response.read(self.block_size):
+            print(buffer)
+            self.download_file.write(buffer)
 
-            buffer = download_url.read(self.block_size)
-            self.write_file(buffer, current_download_point)
-            current_download_point += len(buffer)
-
-            if not buffer:
-                break
-
-    def write_file(self, buffer, seek_address):
-        self.download_file.seek(seek_address)
+    def write_file(self, buffer, pointer):
+        self.download_file.seek(pointer)
         self.download_file.write(buffer)
-        self.downloaded_size += len(buffer)
-
-        print(f"\r\033[kDownloading state: {size(self.downloaded_size)}  [%3.2f%%]" % (
-                self.downloaded_size * 100. / self.file_size), end='')
 
 
-class Queue:
-    jobs = list()
-
-    def __init__(self, jobs=[], max_workers=3, running=False):
-        self.jobs = jobs
-        self.running = running
-
-    def start(self):
-        self.running = True
-
-    def stop(self):
-        self.running = False
-
-    def worker(self):
-        while self.running:
-            running_threads = list()
-            for job in jobs:
-                while running_threads.__len__() <= self.max_workers:
-                    running_threads.append(Thread(target=job.task, args=job.args))
-                    running_threads[-1].start()
+def sizeof_fmt(num, suffix='B'):
+    for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
+        if abs(num) < 1024.0:
+            return "%3.1f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yi', suffix)
 
 
-class DownloadManager:
-    max_download_thread = 8
+intervals = (
+    ('w', 604800),  # 60 * 60 * 24 * 7
+    ('d', 86400),  # 60 * 60 * 24
+    ('h', 3600),  # 60 * 60
+    ('m', 60),
+    ('s', 1),
+)
 
-    def __init__(self, max_download_thread=8):
-        self.max_download_thread = max_download_thread
 
-    def download(self, url, download_path):
-        downloader = Downloader(self.max_download_thread)
+def display_time(seconds, granularity=2):
+    result = []
 
-        downloader.download(url, download_path)
+    for name, count in intervals:
+        value = seconds // count
+        if value:
+            seconds -= value * count
+            if value == 1:
+                name = name.rstrip('s')
+            result.append("{} {}".format(value, name))
+    return ', '.join(result[:granularity])
