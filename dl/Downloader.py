@@ -3,6 +3,7 @@ from multiprocessing.pool import ThreadPool
 from multiprocessing import Lock
 from multiprocessing.queues import Queue
 import time
+from threading import Thread
 
 
 class Downloader:
@@ -79,7 +80,7 @@ class Downloader:
                     i += 1
             else:
                 partitions = self.remaining_partitions
-
+            Thread(target=self.__speed_meter).start()
             self.thread_pool.map(self.threaded_download, partitions)
         else:
             self.single_thread_download()
