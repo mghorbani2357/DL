@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 # InteleJ idea files
 .idea/
+dl/*.db

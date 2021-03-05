@@ -36,6 +36,7 @@ class Api:
             'name': name,
             'size': self.dl.get_size()
         }
+
     def start_download(self):
         self.dl.download()
 
