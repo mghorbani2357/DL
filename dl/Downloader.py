@@ -23,12 +23,13 @@ class Downloader:
     __downloading = False
     remaining_partitions = list()
 
-    def __init__(self, url, download_path, threads=8, block_size=8196):
+    def __init__(self, url, download_path, threads=8, block_size=8196,limited_speed=None):
         self.url = url
         self.download_path = download_path
         self.thread_pool = ThreadPool(self.threads)
         self.threads = threads
         self.block_size = block_size
+        self.limited_speed = limited_speed
         self.get_details()
 
     def __speed_meter(self):
@@ -91,6 +92,12 @@ class Downloader:
     def threaded_download(self, download_partition):
         beginning_pointer, ending_pointer = download_partition
         if self.__downloading:
+
+            self.__lock.acquire()
+            while self.speed > self.limited_speed:
+                time.sleep(0.1)
+            self.__lock.release()
+
             request = Request(self.url)
             request.add_header("Range", f"bytes={beginning_pointer}-{ending_pointer}")
             response = urlopen(request)
@@ -98,7 +105,6 @@ class Downloader:
             self.write_file(buffer, beginning_pointer)
             self.__lock.acquire()
             self.downloaded_size += len(buffer)
-            self.__lock.release()
         else:
             self.__lock.acquire()
             self.remaining_partitions.append(download_partition)
