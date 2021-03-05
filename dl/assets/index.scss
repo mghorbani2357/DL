@@ -50,6 +50,45 @@ body {
   font-size: 13px;
   font-weight: 500;
 
+  .modal{
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    background-color: rgba(0,0,0,0.3);
+    display: none;
+    .modal-body{
+      background-color: white;
+      min-width: 100px;
+      min-height: 100px;
+      @include translate(-50%, -50%);
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      padding: $gap;
+    }
+    &#addNewDownloadModal{
+      .modal-body{
+        //display: flex;
+        //flex-direction: row;
+        //align-items: stretch;
+      }
+    }
+  }
+  .form-control{
+    &[type=text],&[type=url]{
+      border: 1px solid rgba(0,0,0,0.3);
+      $size: 30px;
+      height: $size;
+      line-height: $size;
+      padding: 0 5px;
+      &:focus{
+        outline: none;
+      }
+    }
+  }
   .container {
     display: flex;
     align-items: stretch;

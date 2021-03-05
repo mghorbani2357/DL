@@ -164,7 +164,7 @@
             </ul>-->
         </header>
         <section>
-            <table>
+            <table id="downloads">
                 <thead>
                 <tr>
                     <td>
@@ -183,7 +183,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr>
+                <!--<tr>
                     <td>
                         <label>
                             <input type="checkbox">
@@ -330,7 +330,7 @@
                             <a href="javascript:void(0)" class="btn-action btn-delete"></a>
                         </div>
                     </td>
-                </tr>
+                </tr>-->
                 </tbody>
             </table>
         </section>
@@ -368,6 +368,16 @@
                 </div>
             </div>
         </footer>
+    </div>
+
+
+    <div class="modal" id="addNewDownloadModal">
+        <div class="modal-body">
+            <label for="url">URL:</label>
+            <input type="url" id="url" name="url" class="form-control">
+            <button id="start-new-download">Add</button>
+            <button>Cancel</button>
+        </div>
     </div>
 </div>
 <script src="assets/jquery-3.5.1.min.js"></script>
