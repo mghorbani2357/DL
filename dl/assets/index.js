@@ -3,6 +3,7 @@ window.addEventListener('pywebviewready', function () {
     // container.innerHTML = '<i>pywebview</i> is ready';
     // initialize()
 })
+/*
 
 function showResponse(response) {
     let container = document.getElementById('response-container')
@@ -13,6 +14,7 @@ function showResponse(response) {
 function initialize() {
     pywebview.api.init().then(showResponse)
 }
+*/
 
 $(function () {
     $("#aside ul li > a").click(function () {
@@ -33,7 +35,9 @@ $(function () {
         }
     })
     $("#aside > ul > li:not(.label):first > a:first").click();
-
+    $(document).on('click', ".close-modal", function () {
+        $(this).closest('.modal').hide();
+    })
     $("#new-btn").click(function () {
         /*pywebview.api.new_download()*/
         $("#addNewDownloadModal").show();
@@ -76,17 +80,20 @@ $(function () {
                     </td>
                 </tr>
         `;
+
             template = template.replace('{name}', response.name).replace('{size}', response.size);
-            $("#downloads").append(template)
-            let timer;
+            $("#info-url").val(response.name);
+            $("#info-size").val(response.size);
+            /*$("#downloads").append(template)*/
+            /*let timer;
             pywebview.api.start_download();
-            timer = setInterval(function (){
-                 pywebview.api.getStatus().then(function (res){
-                     $(".dl_speed").text(res.speed);
-                     $(".progress").text(res.percent.toFixed(2) + "%")
-                     $(".progress-bar > div").width(res.percent + "%")
-                 });
-            },100)
+            timer = setInterval(function () {
+                pywebview.api.getStatus().then(function (res) {
+                    $(".dl_speed").text(res.speed);
+                    $(".progress").text(res.percent.toFixed(2) + "%")
+                    $(".progress-bar > div").width(res.percent + "%")
+                });
+            }, 100)*/
 
         });
         // console.log(url,name);

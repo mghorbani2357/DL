@@ -9,9 +9,56 @@
     <link rel="stylesheet" href="assets/index.css">
 </head>
 <body>
-
+<table id="addNewDownloadInfoModal">
+    <tr>
+        <td><label for="info-url">URL</label></td>
+        <td>
+            <input type="url" id="info-url" class="form-control mb-5" value="https://google.com/asddasdfasa.mp3" readonly>
+        </td>
+        <td class="w-80px mw-80 px-2" rowspan="3">
+            <img src="assets/svg/files/mp3.svg" class="w-100">
+            <div class="text-center" id="info-size">15.65 MB</div>
+        </td>
+    </tr>
+    <tr>
+        <td><label for="info-category">Category</label></td>
+        <td class="select-category">
+            <select id="info-category" class="form-control mb-5">
+                <option value="general">General</option>
+                <option value="document">Document</option>
+                <option value="audio">Audio</option>
+            </select>
+            <button class="btn btn-default">
+                +
+            </button>
+        </td>
+    </tr>
+    <tr>
+        <td><label for="info-save-as">Save As</label></td>
+        <td class="save-as">
+            <input type="url" id="info-save-as" class="form-control mb-5" value="Download/asddasdfasa.mp3" readonly>
+            <button class="btn btn-default">
+                ...
+            </button>
+        </td>
+    </tr>
+    <tr>
+        <td><label for="info-description">Description</label></td>
+        <td colspan="2">
+            <input type="text" id="info-description" class="form-control mb-5">
+        </td>
+    </tr>
+    <tr>
+        <td></td>
+        <td colspan="2">
+            <button onclick="cancel()" class="btn btn-default">Cancel</button>
+            <button class="btn btn-default">Start Download</button>
+            <button class="btn btn-default">Download Later</button>
+        </td>
+    </tr>
+</table>
 
 <script src="assets/jquery-3.5.1.min.js"></script>
-<script src="assets/index.js"></script>
+<script src="assets/new.js"></script>
 </body>
 </html>

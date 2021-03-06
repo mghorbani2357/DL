@@ -1,12 +1,14 @@
 @import "poppins";
 @import "shabnam";
 @import "functions";
+@import "utils";
 
 $gap: 15px;
 $asideWidth: 25%;
 :root {
   --info: #44C7F0;
   --success: #27AE60;
+  --success-dark: #219451;
   --success-light: #e9f8ef;
   --text-light: rgba(0, 0, 0, 0.3);
   --border: 1px solid rgba(0, 0, 0, .05);
@@ -50,16 +52,17 @@ body {
   font-size: 13px;
   font-weight: 500;
 
-  .modal{
+  .modal {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     z-index: 10000;
-    background-color: rgba(0,0,0,0.3);
+    background-color: rgba(0, 0, 0, 0.3);
     display: none;
-    .modal-body{
+
+    .modal-body {
       background-color: white;
       min-width: 100px;
       min-height: 100px;
@@ -69,26 +72,93 @@ body {
       top: 50%;
       padding: $gap;
     }
-    &#addNewDownloadModal{
-      .modal-body{
-        //display: flex;
-        //flex-direction: row;
-        //align-items: stretch;
+
+    &#addNewDownloadModal {
+      .modal-body {
+        min-width: 500px;
+        width: 65%;
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        min-height: auto;
+
+        label {
+          font-size: 15px;
+          display: block;
+          margin-bottom: 12px;
+        }
+
+        & > div {
+          flex-grow: 1;
+          $size: 120px;
+
+          &:first-child {
+            width: calc(100% - #{$size});
+          }
+
+          &:last-child {
+            width: $size;
+          }
+        }
       }
     }
   }
-  .form-control{
-    &[type=text],&[type=url]{
-      border: 1px solid rgba(0,0,0,0.3);
-      $size: 30px;
-      height: $size;
-      line-height: $size;
-      padding: 0 5px;
-      &:focus{
-        outline: none;
+
+  .btn {
+    display: inline-block;
+    padding: 5px 10px;
+    border: 1px solid transparent;
+    @include border-radius(3px);
+    color: white;
+    cursor: pointer;
+    @include transition-duration(0.3s);
+    $size: 30px;
+    height: $size;
+
+    &:focus {
+      outline: none;
+    }
+
+    &.btn-default {
+      background-color: transparent;
+      color: black;
+      border-color: rgba(0, 0, 0, 0.3);
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+      }
+    }
+
+
+    &.btn-info {
+      background-color: var(--info);
+    }
+
+    &.btn-success {
+      background-color: var(--success);
+
+      &:hover {
+        background-color: var(--success-dark);
       }
     }
   }
+
+  .form-control {
+    display: block;
+    width: 100%;
+
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    $size: 30px;
+    height: $size;
+    line-height: $size;
+    padding: 0 5px;
+    @include border-radius(3px);
+
+    &:focus {
+      outline: none;
+    }
+  }
+
   .container {
     display: flex;
     align-items: stretch;
@@ -672,6 +742,43 @@ body {
 
 }
 
+#addNewDownloadInfoModal {
+  padding: $gap;
+  width: 100%;
+
+  .select-category, .save-as {
+    position: relative;
+    padding-right: 35px;
+
+    button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 30px;
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+
+  tr {
+    td:first-child{
+      width: 120px;
+    }
+    &:last-child {
+      text-align: center;
+
+      button{
+        width: calc((100% - 10px) / 3);
+        float: right;
+        &:not(:last-child){
+          margin-left: 5px;
+        }
+      }
+
+
+    }
+  }
+}
 
 @keyframes pulse-ring {
   0% {

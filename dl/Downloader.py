@@ -1,11 +1,9 @@
-import time
 from urllib.request import urlopen, Request
 from multiprocessing.pool import ThreadPool
 from multiprocessing import Lock
 from multiprocessing.queues import Queue
-
-
-from dl.utils import display_time, sizeof_fmt
+import time
+from threading import Thread
 
 
 class Downloader:
@@ -19,21 +17,28 @@ class Downloader:
     download_file = None
     pause_able = False
     speed = 0
-    lock = Lock()
+    percent = 0
+    remaining_time = 0
+    __lock = Lock()
+    __downloading = False
+    remaining_partitions = list()
 
-    def __init__(self, url, download_path, threads=8, block_size=8196):
+    def __init__(self, url, download_path, threads=8, block_size=8196,limited_speed=float('inf')):
         self.url = url
         self.download_path = download_path
         self.thread_pool = ThreadPool(self.threads)
         self.threads = threads
         self.block_size = block_size
+        self.limited_speed = limited_speed
         self.get_details()
 
     def __speed_meter(self):
         previous_downloaded_size = self.downloaded_size
         current_downloaded_size = self.downloaded_size
-        while self.downloading:
+        while self.__downloading:
             self.speed = (current_downloaded_size - previous_downloaded_size) * 10
+            self.percent = self.downloaded_size * 100 / self.file_size
+            self.remaining_time = (self.file_size - self.downloaded_size) / self.speed if not self.speed else float('inf')
             time.sleep(0.1)
             previous_downloaded_size = current_downloaded_size
             current_downloaded_size = self.downloaded_size
@@ -48,17 +53,8 @@ class Downloader:
         if meta.get('Accept-Ranges') == 'bytes':
             self.pause_able = True
 
-    def percent(self):
-        return self.downloaded_size * 100 / self.file_size
-
-    def remaining_time(self):
-        return (self.file_size - self.downloaded_size) / self.speed
-
-    def get_remaining_time(self):
-        return display_time(self.remaining_time())
-
-    def get_size(self):
-        return sizeof_fmt(self.file_size)
+    def pause(self):
+        self.__downloading = False
 
     def download(self):
 
@@ -66,37 +62,53 @@ class Downloader:
         self.download_file.seek(self.file_size - 1)
         self.download_file.write(b'\0')
         self.download_file.seek(0)
+        self.__downloading = True
 
         if self.pause_able:
 
-            i = 0
-            partitions = list()
-            while True:
-                if self.block_size * (i + 1) > self.file_size:
-                    if self.file_size % self.block_size != 0:
-                        partitions.append([i * self.block_size, self.file_size])
+            if not self.remaining_partitions:
 
-                    break
+                i = 0
+                partitions = list()
+                while True:
+                    if self.block_size * (i + 1) > self.file_size:
+                        if self.file_size % self.block_size != 0:
+                            partitions.append([i * self.block_size, self.file_size])
 
-                partitions.append([i * self.block_size, (i + 1) * self.block_size])
-                i += 1
+                        break
 
+                    partitions.append([i * self.block_size, (i + 1) * self.block_size])
+                    i += 1
+            else:
+                partitions = self.remaining_partitions
+            Thread(target=self.__speed_meter).start()
             self.thread_pool.map(self.threaded_download, partitions)
         else:
             self.single_thread_download()
 
-            self.download_file.close()
+        self.__downloading = False
+        self.download_file.close()
 
     def threaded_download(self, download_partition):
         beginning_pointer, ending_pointer = download_partition
-        request = Request(self.url)
-        request.add_header("Range", f"bytes={beginning_pointer}-{ending_pointer}")
-        response = urlopen(request)
-        buffer = response.read(self.block_size)
-        self.write_file(buffer, beginning_pointer)
-        self.lock.acquire()
-        self.downloaded_size += len(buffer)
-        self.lock.release()
+        if self.__downloading:
+
+            self.__lock.acquire()
+            while self.speed > self.limited_speed:
+                time.sleep(0.1)
+            self.__lock.release()
+
+            request = Request(self.url)
+            request.add_header("Range", f"bytes={beginning_pointer}-{ending_pointer}")
+            response = urlopen(request)
+            buffer = response.read(self.block_size)
+            self.write_file(buffer, beginning_pointer)
+            self.__lock.acquire()
+            self.downloaded_size += len(buffer)
+        else:
+            self.__lock.acquire()
+            self.remaining_partitions.append(download_partition)
+            self.__lock.release()
 
     def single_thread_download(self):
         request = Request(self.url)

@@ -373,12 +373,17 @@
 
     <div class="modal" id="addNewDownloadModal">
         <div class="modal-body">
-            <label for="url">URL:</label>
-            <input type="url" id="url" name="url" class="form-control">
-            <button id="start-new-download">Add</button>
-            <button>Cancel</button>
+            <div>
+                <label for="url">URL:</label>
+                <input type="url" id="url" class="form-control">
+            </div>
+            <div class="pl-15">
+                <button class="btn btn-default d-block w-100 mb-5" id="start-new-download">Add</button>
+                <button class="btn btn-default d-block w-100 close-modal">Cancel</button>
+            </div>
         </div>
     </div>
+
 </div>
 <script src="assets/jquery-3.5.1.min.js"></script>
 <script src="assets/index.js"></script>

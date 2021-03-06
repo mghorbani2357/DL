@@ -4,17 +4,19 @@ import webview
 
 from dl.Downloader import Downloader
 from dl.db_manager import DBManager
+from dl.utils import sizeof_fmt
 
-window = None  # new_window = None
+window = new_window = None
 
 
-# class NewDownloadApi:
-#     def __init__(self):
-#         self.cancel_heavy_stuff_flag = False
-#
-#     def select_save_in(self, filename: str):
-#         result = new_window.create_file_dialog(webview.SAVE_DIALOG, directory='/', save_filename=filename)
-#         return result
+class NewDownloadApi:
+    def cancel(self):
+        new_window.destroy()
+
+    def select_save_in(self, filename: str):
+        result = new_window.create_file_dialog(webview.SAVE_DIALOG, directory='/', save_filename=filename)
+        return result
+
 
 class Api:
     def __init__(self):
@@ -27,14 +29,18 @@ class Api:
         return response
 
     def new_download(self, url, name):
-        # new_api = NewDownloadApi()
-        # new_window = webview.create_window('New download', "new.html", js_api=new_api, min_size=(500, 350))
-        # new_window.resize(500, 350)
-        # webview.start(new_window)
         self.dl = Downloader(url, name)
+        new_api = NewDownloadApi()
+        new_window = webview.create_window('New download', "new.html", js_api=new_api, min_size=(600, 210))
+        new_window.resize(650, 250)
+        webview.start(new_window, debug=True)
+        # new_window.evaluate_js('$("#info-url").val("%s");$("#info-size").val("%s");' % (url, sizeof_fmt(self.dl.file_size)))
+        # new_window.evaluate_js(
+        #     'document.getElementById("info-url").innerText = "%s";document.getElementById("info-size").innerText = "%s";' % (
+        #     url, sizeof_fmt(self.dl.file_size)))
         return {
             'name': name,
-            'size': self.dl.get_size()
+            'size': sizeof_fmt(self.dl.file_size)
         }
 
     def start_download(self):
