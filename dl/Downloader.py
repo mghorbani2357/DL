@@ -23,7 +23,7 @@ class Downloader:
     __downloading = False
     remaining_partitions = list()
 
-    def __init__(self, url, download_path, threads=8, block_size=8196,limited_speed=None):
+    def __init__(self, url, download_path, threads=8, block_size=8196,limited_speed=float('inf')):
         self.url = url
         self.download_path = download_path
         self.thread_pool = ThreadPool(self.threads)
@@ -38,7 +38,7 @@ class Downloader:
         while self.__downloading:
             self.speed = (current_downloaded_size - previous_downloaded_size) * 10
             self.percent = self.downloaded_size * 100 / self.file_size
-            self.remaining_time = (self.file_size - self.downloaded_size) / self.speed
+            self.remaining_time = (self.file_size - self.downloaded_size) / self.speed if not self.speed else float('inf')
             time.sleep(0.1)
             previous_downloaded_size = current_downloaded_size
             current_downloaded_size = self.downloaded_size
