@@ -5,7 +5,7 @@
 
 ```
  pip install -r requirements.txt 
- ```
+```
 
 # Run in development mode
 ``` 

@@ -11,11 +11,13 @@ class Downloader:
     threads = 8
     url = None
     download_path = None
+    content_type = None
     downloaded_size = 0
     file_size = 0
     file_name = None
     download_file = None
     pause_able = False
+    connection = None
     speed = 0
     percent = 0
     remaining_time = 0
@@ -48,7 +50,8 @@ class Downloader:
 
         self.file_name = self.url.split('/')[-1]
         self.file_size = int(meta.get("Content-Length"))
-
+        self.content_type = meta.get("Content-Type")
+        self.connection = meta.get("Connection")
         if meta.get('Accept-Ranges') == 'bytes':
             self.pause_able = True
 
