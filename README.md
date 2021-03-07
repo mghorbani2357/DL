@@ -3,8 +3,12 @@
 
 # Install requirements
 
-``` pip install -r requirements.txt ```
+```
+ pip install -r requirements.txt 
+ ```
 
-# Run in developement mode
-``` python dl/main.py ```
+# Run in development mode
+``` 
+python dl/main.py 
+```
 
