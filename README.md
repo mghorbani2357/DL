@@ -6,11 +6,10 @@
 ## Install requirements
 
 ```bash
- pip install -r requirements.txt 
+  pip install -r requirements.txt 
 ```
 
 ## Run in development mode
 ```bash
-python dl/main.py 
+  python dl/main.py 
 ```
-

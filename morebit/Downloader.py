@@ -1,7 +1,6 @@
 from urllib.request import urlopen, Request
 from multiprocessing.pool import ThreadPool
 from multiprocessing import Lock
-from multiprocessing.queues import Queue
 import time
 from threading import Thread
 
@@ -21,11 +20,20 @@ class Downloader:
     speed = 0
     percent = 0
     remaining_time = 0
+    headers = None
     __lock = Lock()
     __downloading = False
     remaining_partitions = list()
 
     def __init__(self, url, download_path, threads=8, block_size=8196, limited_speed=float('inf')):
+        """
+            Args:
+                url(str): Download file URL
+                download_path(str): Download path of file
+                threads(int): Threads count
+                block_size(int) : Download size in each block
+                limited_speed(int) : Speed limiter for download speed
+        """
         self.url = url
         self.download_path = download_path
         self.thread_pool = ThreadPool(self.threads)
@@ -45,15 +53,14 @@ class Downloader:
             previous_downloaded_size = self.downloaded_size
 
     def get_details(self):
-        u = urlopen(self.url)
-        meta = u.info()
-
-        self.file_name = self.url.split('/')[-1]
-        self.file_size = int(meta.get("Content-Length"))
-        self.content_type = meta.get("Content-Type")
-        self.connection = meta.get("Connection")
-        if meta.get('Accept-Ranges') == 'bytes':
-            self.pause_able = True
+        with urlopen(self.url).info as meta:
+            self.file_name = self.url.split('/')[-1]
+            self.file_size = int(meta.get("Content-Length"))
+            self.content_type = meta.get("Content-Type")
+            self.connection = meta.get("Connection")
+            self.headers = meta
+            if meta.get('Accept-Ranges') == 'bytes':
+                self.pause_able = True
 
     def pause(self):
         self.__downloading = False
@@ -101,9 +108,9 @@ class Downloader:
 
             request = Request(self.url)
             request.add_header("Range", f"bytes={beginning_pointer}-{ending_pointer}")
-            response = urlopen(request)
-            buffer = response.read(self.block_size)
-            self.write_file(buffer, beginning_pointer)
+            with urlopen(request) as response:
+                buffer = response.read(self.block_size)
+                self.write_file(buffer, beginning_pointer)
         else:
             self.__lock.acquire()
             self.remaining_partitions.append(download_partition)
