@@ -1,3 +1,5 @@
+""
+
 import json
 from urllib.request import urlopen, Request
 from multiprocessing.pool import ThreadPool
@@ -43,36 +45,40 @@ class Downloader:
         self.limited_speed = limited_speed
         self.get_details()
 
+    @property
+    def downloading(self):
+        return self.__downloading
+
     def __speed_meter(self):
         previous_downloaded_size = self.downloaded_size
         while self.__downloading:
             self.speed = (self.downloaded_size - previous_downloaded_size) * 10
             self.percent = float(self.downloaded_size * 100 / self.file_size)
-            self.remaining_time = (self.file_size - self.downloaded_size) / self.speed if not self.speed else float(
+            self.remaining_time = (self.file_size - self.downloaded_size) / self.speed if self.speed != 0 else float(
                 'inf')
-            time.sleep(0.1)
             previous_downloaded_size = self.downloaded_size
+            time.sleep(0.5)
 
     def get_details(self):
-        with urlopen(self.url).info as meta:
-            self.file_name = self.url.split('/')[-1]
-            self.file_size = int(meta.get("Content-Length"))
-            self.content_type = meta.get("Content-Type")
-            self.connection = meta.get("Connection")
-            self.headers = meta
-            if meta.get('Accept-Ranges') == 'bytes':
-                self.pause_able = True
+        u = urlopen(self.url)
+        meta = u.info()
+        self.file_name = self.url.split('/')[-1]
+        self.file_size = int(meta.get("Content-Length"))
+        self.content_type = meta.get("Content-Type")
+        self.connection = meta.get("Connection")
+        self.headers = meta
+        if meta.get('Accept-Ranges') == 'bytes':
+            self.pause_able = True
 
     def pause(self):
         self.__downloading = False
 
     def download(self):
-
+        self.__downloading = True
         self.download_file = open(self.download_path, 'w+b')
         self.download_file.seek(self.file_size - 1)
         self.download_file.write(b'\0')
         self.download_file.seek(0)
-        self.__downloading = True
         Thread(target=self.__speed_meter).start()
         if self.pause_able:
 
@@ -95,8 +101,8 @@ class Downloader:
         else:
             self.single_thread_download()
 
-        self.__downloading = False
         self.download_file.close()
+        self.__downloading = False
 
     def threaded_download(self, download_partition):
         beginning_pointer, ending_pointer = download_partition
