@@ -9,25 +9,85 @@ from threading import Thread
 
 
 class Downloader:
-    block_size = 8192
-    threads = 8
-    url = None
-    download_path = None
-    content_type = None
-    downloaded_size = 0
-    file_size = 0
-    file_name = None
-    download_file = None
-    pause_able = False
-    connection = None
-    speed = 0
-    percent = 0
-    remaining_time = 0
+    __block_size = 8192
+    __threads = 8
+    __url = None
+    __download_path = None
+    __content_type = None
+    __downloaded_size = 0
+    __file_size = 0
+    __file_name = None
+    __download_file = None
+    __pause_able = False
+    __connection = None
+    __speed = 0
+    __percent = 0
+    __remaining_time = 0
     update_meter = 0.5
-    headers = None
+    __headers = None
     __lock = Lock()
     __downloading = False
-    remaining_partitions = list()
+    __remaining_partitions = list()
+
+    @property
+    def pause_able(self):
+        return self.__pause_able
+
+    @property
+    def speed(self):
+        return self.__speed
+
+    @property
+    def percent(self):
+        return self.__percent
+
+    @property
+    def remaining_time(self):
+        return self.__remaining_time
+
+    @property
+    def remaining_partitions(self):
+        return self.__remaining_partitions
+
+    @property
+    def content_type(self):
+        return self.__content_type
+
+    @property
+    def downloaded_size(self):
+        return self.__downloaded_size
+
+    @property
+    def file_size(self):
+        return self.__file_size
+
+    @property
+    def file_name(self):
+        return self.__file_name
+
+    @property
+    def download_file(self):
+        return self.__download_file
+
+    @property
+    def block_size(self):
+        return self.__block_size
+
+    @property
+    def threads(self):
+        return self.__threads
+
+    @property
+    def url(self):
+        return self.__url
+
+    @property
+    def download_path(self):
+        return self.__download_path
+
+    @property
+    def downloading(self):
+        return self.__downloading
 
     def __init__(self, url, download_path, threads=8, block_size=8196, limited_speed=float('inf')):
         """
@@ -39,71 +99,68 @@ class Downloader:
                 block_size(int) : Download size in each block
                 limited_speed(int|float) : Speed limiter for download speed
         """
-        self.url = url
-        self.download_path = download_path
-        self.thread_pool = ThreadPool(self.threads)
-        self.threads = threads
-        self.block_size = block_size
+        self.__url = url
+        self.__download_path = download_path
+        self.thread_pool = ThreadPool(self.__threads)
+        self.__threads = threads
+        self.__block_size = block_size
         self.limited_speed = limited_speed
         self.get_details()
 
-    @property
-    def downloading(self):
-        return self.__downloading
-
     def __speed_meter(self):
-        previous_downloaded_size = self.downloaded_size
+        previous_downloaded_size = self.__downloaded_size
         while self.__downloading:
-            self.speed = (self.downloaded_size - previous_downloaded_size) / self.update_meter
-            self.percent = float(self.downloaded_size * 100 / self.file_size)
-            self.remaining_time = (self.file_size - self.downloaded_size) / self.speed if self.speed != 0 else float(
+            self.__speed = (self.__downloaded_size - previous_downloaded_size) / self.update_meter
+            self.__percent = float(self.__downloaded_size * 100 / self.__file_size)
+            self.__remaining_time = (
+                                            self.__file_size - self.__downloaded_size) / self.__speed if self.__speed != 0 else float(
                 'inf')
-            previous_downloaded_size = self.downloaded_size
+            previous_downloaded_size = self.__downloaded_size
             time.sleep(self.update_meter)
 
     def get_details(self):
-        u = urlopen(self.url)
+        u = urlopen(self.__url)
         meta = u.info()
-        self.file_name = self.url.split('/')[-1]
-        self.file_size = int(meta.get("Content-Length"))
-        self.content_type = meta.get("Content-Type")
-        self.connection = meta.get("Connection")
-        self.headers = meta
+        self.__file_name = self.__url.split('/')[-1]
+        self.__file_size = int(meta.get("Content-Length"))
+        self.__content_type = meta.get("Content-Type")
+        self.__connection = meta.get("Connection")
+        self.__headers = meta
         if meta.get('Accept-Ranges') == 'bytes':
-            self.pause_able = True
+            self.__pause_able = True
 
     def pause(self):
         self.__downloading = False
 
     def download(self):
         self.__downloading = True
-        self.download_file = open(self.download_path, 'w+b')
-        self.download_file.seek(self.file_size - 1)
-        self.download_file.write(b'\0')
-        self.download_file.seek(0)
+        self.__download_file = open(self.__download_path, 'w+b')
+        self.__download_file.seek(self.__file_size - 1)
+        self.__download_file.write(b'\0')
+        self.__download_file.seek(0)
         Thread(target=self.__speed_meter).start()
-        if self.pause_able:
+        if self.__pause_able:
 
-            if not self.remaining_partitions:
+            if not self.__remaining_partitions:
 
                 i = 0
                 partitions = list()
                 while True:
-                    if self.block_size * (i + 1) > self.file_size:
-                        if self.file_size % self.block_size != 0:
-                            partitions.append([i * self.block_size, self.file_size])
+                    if self.__block_size * (i + 1) > self.__file_size:
+                        if self.__file_size % self.__block_size != 0:
+                            partitions.append([i * self.__block_size, self.__file_size])
 
                         break
 
-                    partitions.append([i * self.block_size, (i + 1) * self.block_size])
+                    partitions.append([i * self.__block_size, (i + 1) * self.__block_size])
                     i += 1
             else:
-                partitions = self.remaining_partitions
+                partitions = self.__remaining_partitions
             self.thread_pool.map(self.threaded_download, partitions)
         else:
             self.single_thread_download()
 
-        self.download_file.close()
+        self.__download_file.close()
         self.__downloading = False
 
     def threaded_download(self, download_partition):
@@ -111,35 +168,35 @@ class Downloader:
         if self.__downloading:
 
             self.__lock.acquire()
-            while self.speed > self.limited_speed:
+            while self.__speed > self.limited_speed:
                 time.sleep(0.1)
             self.__lock.release()
 
-            request = Request(self.url)
+            request = Request(self.__url)
             request.add_header("Range", f"bytes={beginning_pointer}-{ending_pointer}")
             with urlopen(request) as response:
-                buffer = response.read(self.block_size)
+                buffer = response.read(self.__block_size)
                 self.write_file(buffer, beginning_pointer)
         else:
             self.__lock.acquire()
-            self.remaining_partitions.append(download_partition)
+            self.__remaining_partitions.append(download_partition)
             self.__lock.release()
 
     def single_thread_download(self):
-        request = Request(self.url)
+        request = Request(self.__url)
         response = urlopen(request)
 
-        while buffer := response.read(self.block_size):
-            while self.speed > self.limited_speed:
+        while buffer := response.read(self.__block_size):
+            while self.__speed > self.limited_speed:
                 time.sleep(0.1)
-            self.download_file.write(buffer)
-            self.downloaded_size += len(buffer)
+            self.__download_file.write(buffer)
+            self.__downloaded_size += len(buffer)
 
     def write_file(self, buffer, pointer):
-        self.download_file.seek(pointer)
-        self.download_file.write(buffer)
+        self.__download_file.seek(pointer)
+        self.__download_file.write(buffer)
         self.__lock.acquire()
-        self.downloaded_size += len(buffer)
+        self.__downloaded_size += len(buffer)
         self.__lock.release()
 
 
