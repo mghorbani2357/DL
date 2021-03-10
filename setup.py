@@ -23,7 +23,7 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     classifiers=[k for k in open('CLASSIFIERS').read().split('\n') if k],
     install_requires=list(REQUIREMENTS),
-    long_description=open('README.md').read(),
+    long_description=open('README.md').read() + open('HISTORY.md').read(),
     long_description_content_type='text/markdown',
     description='Advance Download Manager',
 )

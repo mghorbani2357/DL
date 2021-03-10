@@ -1,4 +1,4 @@
-""
+"""Advance downloader"""
 
 import json
 from urllib.request import urlopen, Request
@@ -31,6 +31,7 @@ class Downloader:
 
     def __init__(self, url, download_path, threads=8, block_size=8196, limited_speed=float('inf')):
         """
+
             Args:
                 url(str): Download file URL
                 download_path(str): Download path of file
@@ -143,7 +144,7 @@ class Downloader:
 
 
 class DownloadManager:
-    downloads = list()
+    downloads = dict()
     parallel_downloads = 3
     download_threads = 8
     block_size = 8196
