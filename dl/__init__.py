@@ -23,6 +23,7 @@ class Downloader:
     speed = 0
     percent = 0
     remaining_time = 0
+    update_meter = 0.5
     headers = None
     __lock = Lock()
     __downloading = False
@@ -52,12 +53,12 @@ class Downloader:
     def __speed_meter(self):
         previous_downloaded_size = self.downloaded_size
         while self.__downloading:
-            self.speed = (self.downloaded_size - previous_downloaded_size) * 10
+            self.speed = (self.downloaded_size - previous_downloaded_size) / self.update_meter
             self.percent = float(self.downloaded_size * 100 / self.file_size)
             self.remaining_time = (self.file_size - self.downloaded_size) / self.speed if self.speed != 0 else float(
                 'inf')
             previous_downloaded_size = self.downloaded_size
-            time.sleep(0.5)
+            time.sleep(self.update_meter)
 
     def get_details(self):
         u = urlopen(self.url)
