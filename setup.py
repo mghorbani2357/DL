@@ -1,4 +1,4 @@
-"""setup.py for Morebit"""
+"""setup.py for dl"""
 
 __author__ = "Mohsen Ghorbani"
 __email__ = "m.ghorbani2357@gmail.com"

@@ -1,5 +1,10 @@
 """Advance downloader"""
 
+from ._version import get_versions
+
+__version__ = get_versions()['version']
+del get_versions
+
 import json
 from urllib.request import urlopen, Request
 from multiprocessing.pool import ThreadPool
@@ -218,3 +223,5 @@ class DownloadManager:
 
     def add_download(self, url, download_path, threads=8, block_size=8196, limited_speed=float('inf')):
         self.downloads.append(Downloader(url, download_path, threads, block_size, limited_speed))
+
+
