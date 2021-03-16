@@ -1,16 +1,15 @@
 """Advance downloader"""
-
-from ._version import get_versions
-
-__version__ = get_versions()['version']
-del get_versions
-
 import json
 from urllib.request import urlopen, Request
 from multiprocessing.pool import ThreadPool
 from multiprocessing import Lock
 import time
 from threading import Thread
+
+from ._version import get_versions
+
+__version__ = get_versions()['version']
+del get_versions
 
 
 class Downloader:
@@ -34,6 +33,7 @@ class Downloader:
     __downloading = False
     __remaining_partitions = list()
 
+    # region attributes
     @property
     def pause_able(self):
         return self.__pause_able
@@ -94,6 +94,8 @@ class Downloader:
     def downloading(self):
         return self.__downloading
 
+    # endregion
+
     def __init__(self, url, download_path, threads=8, block_size=8196, limited_speed=float('inf')):
         """
 
@@ -117,9 +119,7 @@ class Downloader:
         while self.__downloading:
             self.__speed = (self.__downloaded_size - previous_downloaded_size) / self.update_meter
             self.__percent = float(self.__downloaded_size * 100 / self.__file_size)
-            self.__remaining_time = (
-                                            self.__file_size - self.__downloaded_size) / self.__speed if self.__speed != 0 else float(
-                'inf')
+            self.__remaining_time = (self.__file_size - self.__downloaded_size) / self.__speed if self.__speed != 0 else float('inf')
             previous_downloaded_size = self.__downloaded_size
             time.sleep(self.update_meter)
 
@@ -211,6 +211,7 @@ class DownloadManager:
     download_threads = 8
     block_size = 8196
     limit_speed = float('inf')
+    counter = 0
 
     def __init__(self, json_db_path):
         self.json_db_path = json_db_path
@@ -222,6 +223,11 @@ class DownloadManager:
             json.dump(self.json_db, json_file)
 
     def add_download(self, url, download_path, threads=8, block_size=8196, limited_speed=float('inf')):
-        self.downloads.append(Downloader(url, download_path, threads, block_size, limited_speed))
+        self.counter += 1
+        self.downloads[self.counter] = (Downloader(url, download_path, threads, block_size, limited_speed))
 
+    def start_download(self, download_id):
+        self.downloads[download_id].download()
 
+    def pause_download(self, download_id):
+        self.downloads[download_id].pause()
