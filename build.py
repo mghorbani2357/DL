@@ -11,15 +11,15 @@ with open('requirements.txt') as requirements:
 
 if platform.system() == 'Linux':
 
-    dist_path = 'installers/linux'
+    dist_path = 'dist/linux'
 
 elif platform.system() == 'Windows':
 
-    dist_path = 'installers/windows'
+    dist_path = 'dist/windows'
 
 elif platform.system() == 'MacOS':
 
-    dist_path = 'installers/mac'
+    dist_path = 'build/mac'
 
 else:
     dist_path = 'dist'
