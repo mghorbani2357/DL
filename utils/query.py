@@ -1,9 +1,8 @@
 import time
 import humanize
-from dl import Downloader
 
 
-def download_state(downloader: Downloader):
+def download_state(downloader):
     state = f'{downloader.downloaded_size * 100 / downloader.file_size:3.2f}% {downloader.file_name:>30} '
     state += f' {humanize.naturalsize(downloader.speed)} '
     state += f'[{humanize.naturalsize(downloader.downloaded_size)}/{humanize.naturalsize(downloader.file_size)}] '
@@ -13,7 +12,7 @@ def download_state(downloader: Downloader):
     return state
 
 
-def print_download_state(downloader: Downloader):
+def print_download_state(downloader):
     while downloader.downloading:
         print('\r', download_state(downloader), end='')
         time.sleep(0.5)
