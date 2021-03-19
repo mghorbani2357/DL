@@ -26,69 +26,6 @@ class Downloader:
     __downloading = False
     __remaining_partitions = list()
 
-    # region attributes
-    @property
-    def pause_able(self):
-        return self.__pause_able
-
-    @property
-    def speed(self):
-        return self.__speed
-
-    @property
-    def percent(self):
-        return self.__percent
-
-    @property
-    def remaining_time(self):
-        return self.__remaining_time
-
-    @property
-    def remaining_partitions(self):
-        return self.__remaining_partitions
-
-    @property
-    def content_type(self):
-        return self.__content_type
-
-    @property
-    def downloaded_size(self):
-        return self.__downloaded_size
-
-    @property
-    def file_size(self):
-        return self.__file_size
-
-    @property
-    def file_name(self):
-        return self.__file_name
-
-    @property
-    def download_file(self):
-        return self.__download_file
-
-    @property
-    def block_size(self):
-        return self.__block_size
-
-    @property
-    def threads(self):
-        return self.__threads
-
-    @property
-    def url(self):
-        return self.__url
-
-    @property
-    def download_path(self):
-        return self.__download_path
-
-    @property
-    def downloading(self):
-        return self.__downloading
-
-    # endregion
-
     def __init__(self, url, download_path, threads=8, block_size=8196, limited_speed=float('inf')):
         """
 
@@ -106,6 +43,10 @@ class Downloader:
         self.__block_size = block_size
         self.limited_speed = limited_speed
         self.get_details()
+
+    def resume(self, remaining_partitions):
+        self.__remaining_partitions = remaining_partitions
+        self.download()
 
     def __speed_meter(self):
         previous_downloaded_size = self.__downloaded_size
@@ -196,3 +137,67 @@ class Downloader:
         self.__lock.acquire()
         self.__downloaded_size += len(buffer)
         self.__lock.release()
+
+    # region Attributes
+
+    @property
+    def pause_able(self):
+        return self.__pause_able
+
+    @property
+    def speed(self):
+        return self.__speed
+
+    @property
+    def percent(self):
+        return self.__percent
+
+    @property
+    def remaining_time(self):
+        return self.__remaining_time
+
+    @property
+    def remaining_partitions(self):
+        return self.__remaining_partitions
+
+    @property
+    def content_type(self):
+        return self.__content_type
+
+    @property
+    def downloaded_size(self):
+        return self.__downloaded_size
+
+    @property
+    def file_size(self):
+        return self.__file_size
+
+    @property
+    def file_name(self):
+        return self.__file_name
+
+    @property
+    def download_file(self):
+        return self.__download_file
+
+    @property
+    def block_size(self):
+        return self.__block_size
+
+    @property
+    def threads(self):
+        return self.__threads
+
+    @property
+    def url(self):
+        return self.__url
+
+    @property
+    def download_path(self):
+        return self.__download_path
+
+    @property
+    def downloading(self):
+        return self.__downloading
+
+    # endregion
