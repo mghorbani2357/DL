@@ -1,3 +1,4 @@
+import math
 from urllib.request import urlopen, Request
 from multiprocessing.pool import ThreadPool
 from multiprocessing import Lock
@@ -38,8 +39,8 @@ class Downloader:
         """
         self.__url = url
         self.__download_path = download_path
-        self.thread_pool = ThreadPool(self.__threads)
         self.__threads = threads
+        self.thread_pool = ThreadPool(self.__threads)
         self.__block_size = block_size
         self.limited_speed = limited_speed
         self.get_details()
@@ -74,25 +75,17 @@ class Downloader:
     def download(self):
         self.__downloading = True
         self.__download_file = open(self.__download_path, 'w+b')
+        # Reserve file size
         self.__download_file.seek(self.__file_size - 1)
         self.__download_file.write(b'\0')
         self.__download_file.seek(0)
         Thread(target=self.__speed_meter).start()
         if self.__pause_able:
-
             if not self.__remaining_partitions:
 
-                i = 0
-                partitions = list()
-                while True:
-                    if self.__block_size * (i + 1) > self.__file_size:
-                        if self.__file_size % self.__block_size != 0:
-                            partitions.append([i * self.__block_size, self.__file_size])
+                partitions = [(i * self.__block_size, min((i + 1) * self.__block_size-1, self.__file_size))
+                              for i in range(math.ceil(self.__file_size / self.__block_size))]
 
-                        break
-
-                    partitions.append([i * self.__block_size, (i + 1) * self.__block_size])
-                    i += 1
             else:
                 partitions = self.__remaining_partitions
             self.thread_pool.map(self.threaded_download, partitions)
