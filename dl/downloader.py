@@ -54,7 +54,8 @@ class Downloader:
         while self.__downloading:
             self.__speed = (self.__downloaded_size - previous_downloaded_size) / self.update_meter
             self.__percent = float(self.__downloaded_size * 100 / self.__file_size)
-            self.__remaining_time = (self.__file_size - self.__downloaded_size) / self.__speed if self.__speed != 0 else float('inf')
+            self.__remaining_time = ((self.__file_size - self.__downloaded_size) / self.__speed) \
+                if self.__speed != 0 else float('inf')
             previous_downloaded_size = self.__downloaded_size
             time.sleep(self.update_meter)
 
@@ -82,13 +83,11 @@ class Downloader:
         Thread(target=self.__speed_meter).start()
         if self.__pause_able:
             if not self.__remaining_partitions:
-
-                partitions = [(i * self.__block_size, min((i + 1) * self.__block_size-1, self.__file_size))
-                              for i in range(math.ceil(self.__file_size / self.__block_size))]
-
-            else:
-                partitions = self.__remaining_partitions
-            self.thread_pool.map(self.threaded_download, partitions)
+                self.__remaining_partitions = [
+                    (i, i * self.__block_size, min((i + 1) * self.__block_size - 1, self.__file_size))
+                    for i in range(math.ceil(self.__file_size / self.__block_size))
+                ]
+            self.thread_pool.map(self.threaded_download, self.__remaining_partitions)
         else:
             self.single_thread_download()
 
@@ -96,7 +95,7 @@ class Downloader:
         self.__downloading = False
 
     def threaded_download(self, download_partition):
-        beginning_pointer, ending_pointer = download_partition
+        index, beginning_pointer, ending_pointer = download_partition
         if self.__downloading:
 
             self.__lock.acquire()
@@ -109,6 +108,10 @@ class Downloader:
             with urlopen(request) as response:
                 buffer = response.read(self.__block_size)
                 self.write_file(buffer, beginning_pointer)
+
+            self.__lock.acquire()
+            self.__remaining_partitions.__delitem__(index)
+            self.__lock.release()
         else:
             self.__lock.acquire()
             self.__remaining_partitions.append(download_partition)
