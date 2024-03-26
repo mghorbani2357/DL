@@ -1,5 +1,6 @@
 import copy
 import math
+import uuid
 from urllib.request import urlopen, Request
 from multiprocessing.pool import ThreadPool
 from multiprocessing import Lock
@@ -30,17 +31,20 @@ class Downloader:
     __downloading = False
     __partitions = list()
 
-    def __init__(self, url, download_path, threads=8, block_size=8196, limited_speed=float('inf')):
+    def __init__(self, url, download_path, download_id=str(uuid.uuid4()), threads=8, block_size=8196,
+                 limited_speed=float('inf')):
         """
 
             Args:
                 url(str): Download file URL
+                download_id(str): Download identifier
                 download_path(str): Download path of file
                 threads(int): Threads count
                 block_size(int) : Download size in each block
                 limited_speed(int|float) : Speed limiter for download speed
         """
         self.__url = url
+        self.download_id = download_id
         self.__download_path = download_path
         self.__threads = threads
         self.thread_pool = ThreadPool(self.__threads)
