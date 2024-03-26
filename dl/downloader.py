@@ -1,3 +1,4 @@
+import copy
 import math
 from urllib.request import urlopen, Request
 from multiprocessing.pool import ThreadPool
@@ -7,6 +8,8 @@ from threading import Thread
 
 
 class Downloader:
+    __check_list = list()
+    __to_be_downloaded = list()
     __block_size = 8192
     __threads = 8
     __url = None
@@ -25,7 +28,7 @@ class Downloader:
     __headers = None
     __lock = Lock()
     __downloading = False
-    __remaining_partitions = list()
+    __partitions = list()
 
     def __init__(self, url, download_path, threads=8, block_size=8196, limited_speed=float('inf')):
         """
@@ -46,7 +49,7 @@ class Downloader:
         self.get_details()
 
     def resume(self, remaining_partitions):
-        self.__remaining_partitions = remaining_partitions
+        self.__partitions = remaining_partitions
         self.download()
 
     def __speed_meter(self):
@@ -82,20 +85,28 @@ class Downloader:
         self.__download_file.seek(0)
         Thread(target=self.__speed_meter).start()
         if self.__pause_able:
-            if not self.__remaining_partitions:
-                self.__remaining_partitions = [
+            if not self.__partitions:
+                self.__partitions = [
                     (i, i * self.__block_size, min((i + 1) * self.__block_size - 1, self.__file_size))
                     for i in range(math.ceil(self.__file_size / self.__block_size))
                 ]
-            self.thread_pool.map(self.threaded_download, self.__remaining_partitions)
+                self.__check_list = [False for _ in range(len(self.__partitions))]
+                self.__to_be_downloaded = copy.deepcopy(self.__partitions)
+            else:
+                self.__to_be_downloaded = list()
+                for i in range(len(self.__partitions)):
+                    if not self.__check_list[i]:
+                        self.__to_be_downloaded.append(self.__partitions[i])
+
+            self.thread_pool.map(self.threaded_download, self.__to_be_downloaded)
         else:
             self.single_thread_download()
 
         self.__download_file.close()
         self.__downloading = False
 
-    def threaded_download(self, download_partition):
-        index, beginning_pointer, ending_pointer = download_partition
+    def threaded_download(self, partition):
+        index, beginning_pointer, ending_pointer = partition
         if self.__downloading:
 
             self.__lock.acquire()
@@ -108,14 +119,7 @@ class Downloader:
             with urlopen(request) as response:
                 buffer = response.read(self.__block_size)
                 self.write_file(buffer, beginning_pointer)
-
-            self.__lock.acquire()
-            self.__remaining_partitions.__delitem__(index)
-            self.__lock.release()
-        else:
-            self.__lock.acquire()
-            self.__remaining_partitions.append(download_partition)
-            self.__lock.release()
+                self.__check_list[index] = True
 
     def single_thread_download(self):
         request = Request(self.__url)
@@ -154,7 +158,7 @@ class Downloader:
 
     @property
     def remaining_partitions(self):
-        return self.__remaining_partitions
+        return self.__partitions
 
     @property
     def content_type(self):
