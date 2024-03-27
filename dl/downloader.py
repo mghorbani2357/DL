@@ -31,8 +31,8 @@ class Downloader:
     __downloading = False
     __partitions = list()
 
-    def __init__(self, url, download_path, download_id=str(uuid.uuid4()), threads=8, block_size=8196,
-                 limited_speed=float('inf')):
+    def __init__(self, url, download_path, download_id=str(uuid.uuid4()), threads=8, block_size=2048,
+                 limited_speed=float('inf'), download_block_count=64):
         """
 
             Args:
@@ -49,6 +49,7 @@ class Downloader:
         self.__threads = threads
         self.thread_pool = ThreadPool(self.__threads)
         self.__block_size = block_size
+        self.__download_block_count = download_block_count
         self.limited_speed = limited_speed
         self.get_details()
 
@@ -91,8 +92,9 @@ class Downloader:
         if self.__pause_able:
             if not self.__partitions:
                 self.__partitions = [
-                    (i, i * self.__block_size, min((i + 1) * self.__block_size - 1, self.__file_size))
-                    for i in range(math.ceil(self.__file_size / self.__block_size))
+                    (i, i * (self.__block_size * self.__download_block_count),
+                     min((i + 1) * (self.__block_size * self.__download_block_count) - 1, self.__file_size))
+                    for i in range(math.ceil(self.__file_size / (self.__block_size * self.__download_block_count)))
                 ]
                 self.__check_list = [False for _ in range(len(self.__partitions))]
                 self.__to_be_downloaded = copy.deepcopy(self.__partitions)
@@ -120,10 +122,16 @@ class Downloader:
 
             request = Request(self.__url)
             request.add_header("Range", f"bytes={beginning_pointer}-{ending_pointer}")
+            buffer = b''
             with urlopen(request) as response:
-                buffer = response.read(self.__block_size)
-                self.write_file(buffer, beginning_pointer)
-                self.__check_list[index] = True
+                for _ in range(self.__download_block_count):
+                    block_buffer = response.read(self.__block_size)
+                    buffer += block_buffer
+                    self.__lock.acquire()
+                    self.__downloaded_size += len(block_buffer)
+                    self.__lock.release()
+            self.write_file(buffer, beginning_pointer)
+            self.__check_list[index] = True
 
     def single_thread_download(self):
         request = Request(self.__url)
@@ -136,10 +144,9 @@ class Downloader:
             self.__downloaded_size += len(buffer)
 
     def write_file(self, buffer, pointer):
+        self.__lock.acquire()
         self.__download_file.seek(pointer)
         self.__download_file.write(buffer)
-        self.__lock.acquire()
-        self.__downloaded_size += len(buffer)
         self.__lock.release()
 
     # region Attributes
