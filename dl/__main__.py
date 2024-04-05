@@ -1,13 +1,14 @@
 import argparse
 from threading import Thread
 from dl import Downloader
-from utils.query import download_state, print_download_state
+from utils import *
 
 parser = argparse.ArgumentParser(description='Downloader.')
 
 parser.add_argument('strings', metavar='L', type=str, nargs='+',
                     help='an string for the download')
-parser.add_argument('--o', dest='output', help='output file path for download (default: file name from url)')
+parser.add_argument('--o', dest='output', help="output path to download (default: file name at the end of url)")
+
 
 if __name__ == '__main__':
     args = parser.parse_args()

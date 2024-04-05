@@ -10,7 +10,7 @@ with open('requirements.txt') as requirements:
 
 dist_path = 'dist'
 
-console_project_path = "interfaces/console/main.py"
+console_project_path = "dl/__main__.py"
 output_file_name = "dl"
 
 installer_config = [

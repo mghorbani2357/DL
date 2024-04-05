@@ -11,5 +11,5 @@
 
 ## Run in development mode
 ```bash
-  python dl/main.py 
+  python dl/__main__.py 
 ```
