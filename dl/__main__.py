@@ -13,7 +13,7 @@ parser.add_argument('--o', dest='output', help="output path to download (default
 if __name__ == '__main__':
     args = parser.parse_args()
     for url in args.strings:
-        download = Downloader(url, args.output if args.output else url.split('/')[-1])
+        download = Downloader(url, args.output if args.output else extract_file_name(url))
         Thread(target=download.download).start()
         thread = Thread(target=print_download_state, args=(download,))
         thread.start()
