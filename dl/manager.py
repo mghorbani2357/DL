@@ -20,18 +20,18 @@ class DownloadManager:
     #     with open(self.json_db_path, 'w') as json_file:
     #         json.dump(self.json_db, json_file)
 
-    def add_download(self, url, download_path, threads=8, block_size=8196, limited_speed=float('inf')):
+    def add(self, url, download_path, threads=8, block_size=8196, limited_speed=float('inf')):
         self.counter += 1
         self.downloads[self.counter] = Downloader(url, download_path, threads, block_size, limited_speed)
 
-    def start_download(self, download_id):
+    def start(self, download_id):
         self.downloads[download_id].download()
 
-    def pause_download(self, download_id):
+    def pause(self, download_id):
         self.downloads[download_id].pause()
 
-    def resume_download(self, download_id):
+    def resume(self, download_id):
         self.downloads[download_id].resume()
 
-    def delete_download(self, download_id):
+    def delete(self, download_id):
         self.downloads.pop(download_id)

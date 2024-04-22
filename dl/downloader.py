@@ -1,4 +1,5 @@
 import copy
+import json
 import math
 import uuid
 from urllib.request import urlopen, Request
@@ -7,38 +8,44 @@ from multiprocessing import Lock
 import time
 from threading import Thread
 
+store_key = ['_Downloader__url', '_Downloader__download_path', 'download_id', '_Downloader__threads',
+             '_Downloader__block_size'
+    , 'limited_speed', '_Downloader__download_block_count', '_Downloader__pause_able', '_Downloader__file_size']
+
 
 class Downloader:
     __check_list = list()
     __to_be_downloaded = list()
-    __block_size = 8192
-    __threads = 8
-    __url = None
-    __download_path = None
+    # __block_size = 8192
+    # __threads = 8
+    # __url = None
+    # __download_path = None
     __content_type = None
     __downloaded_size = 0
     __file_size = 0
-    __file_name = None
+    # __file_name = None
     __download_file = None
     __pause_able = False
     __connection = None
     __speed = 0
     __percent = 0
     __remaining_time = 0
-    update_meter = 0.5
+    # __update_meter = 0.5
     __headers = None
     __lock = Lock()
     __downloading = False
     __partitions = list()
+    __thread_pool = None
 
-    def __init__(self, url, download_path, download_id=str(uuid.uuid4()), threads=8, block_size=2048,
-                 limited_speed=float('inf'), download_block_count=64):
+    def __init__(self, url, download_path, download_state_path=None, download_id=str(uuid.uuid4()), threads=8,
+                 block_size=2048, limited_speed=float('inf'), download_block_count=64, update_meter=0.5):
         """
 
             Args:
                 url(str): Download file URL
                 download_id(str): Download identifier
                 download_path(str): Download path of file
+                download_state_path(str|None): Download file state
                 threads(int): Threads count
                 block_size(int) : Download size in each block
                 limited_speed(int|float) : Speed limiter for download speed
@@ -47,11 +54,37 @@ class Downloader:
         self.download_id = download_id
         self.__download_path = download_path
         self.__threads = threads
-        self.thread_pool = ThreadPool(self.__threads)
         self.__block_size = block_size
         self.__download_block_count = download_block_count
         self.limited_speed = limited_speed
-        self.get_details()
+
+        u = urlopen(self.__url)
+        meta = u.info()
+        self.__file_name = self.__url.split('/')[-1]
+        self.__file_size = int(meta.get("Content-Length"))
+        self.__content_type = meta.get("Content-Type")
+        self.__connection = meta.get("Connection")
+        self.__headers = meta
+        if meta.get('Accept-Ranges') == 'bytes':
+            self.__pause_able = True
+
+        # self.get_details()
+
+    @staticmethod
+    def load_from_str():
+        pass
+        # return Downloader()
+
+    # @staticmethod
+    def export_to_str(self):
+        # 'download_state_path',
+        export = '::'.join([str(self.__dict__[item]) for item in store_key])
+        print(export)
+        # x = self.__dict__
+        # print(json.dumps(x))
+        # buffer = ''
+        # for key, value in self.__dict__.items():
+        #     buffer +=
 
     def resume(self, remaining_partitions):
         self.__partitions = remaining_partitions
@@ -82,6 +115,7 @@ class Downloader:
         self.__downloading = False
 
     def download(self):
+        self.__thread_pool = ThreadPool(self.__threads)
         self.__downloading = True
         self.__download_file = open(self.__download_path, 'w+b')
         # Reserve file size
@@ -104,7 +138,7 @@ class Downloader:
                     if not self.__check_list[i]:
                         self.__to_be_downloaded.append(self.__partitions[i])
 
-            self.thread_pool.map(self.threaded_download, self.__to_be_downloaded)
+            self.__thread_pool.map(self.threaded_download, self.__to_be_downloaded)
         else:
             self.single_thread_download()
 
